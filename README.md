@@ -1,3 +1,5 @@
+!(flashcardy.svg)
+
 ## Flashcardy
 
 As the name suggests, this is an application that revolves around flashcards usage.
