@@ -1,4 +1,4 @@
-!(./flashcardy.svg)
+!(flashcardy.svg)
 
 ## Flashcardy
 
