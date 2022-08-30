@@ -1,4 +1,4 @@
-!(flashcardy.svg)
+![logo](flashcardy.svg)
 
 ## Flashcardy
 
