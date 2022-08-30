@@ -1,4 +1,4 @@
-!(https://github.com/wet-interface/Flashcardy/blob/2dd06f9c9805544bec35b21bb9e016da106ab1d8/flashcardy.svg)
+!(./flashcardy.svg)
 
 ## Flashcardy
 
