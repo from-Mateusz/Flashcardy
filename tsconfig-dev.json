@@ -1,0 +1,11 @@
+{
+    "extends": "@tsconfig/node17/tsconfig.json",
+
+    "include": ["src/dev/**/*"],
+    "exclude": ["node_modules", "**/*.spec.ts"],
+    
+    "compilerOptions": {
+        "outDir": "src/dev/compiled",
+        "strictPropertyInitialization": false,
+    }
+}
