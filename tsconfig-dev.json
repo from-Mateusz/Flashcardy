@@ -5,7 +5,6 @@
     "exclude": ["node_modules", "**/*.spec.ts"],
     
     "compilerOptions": {
-        "outDir": "src/dev/compiled",
         "strictPropertyInitialization": false,
     }
 }

@@ -1,8 +1,10 @@
 import Flashcard from './Flashcard';
-import { KeyGenerators } from '../data/exports';
 import Entity from "../data/Entity";
 
 export default class Deck extends Entity<number> {
+    private static readonly sortAscending = (flashcard1: Flashcard, flashcard2: Flashcard) => {
+                                                return flashcard1.getId() > flashcard2.getId() ? 1 : flashcard1.getId() < flashcard2.getId() ? - 1 : 0 };
+
     private flashcards: Flashcard[] = [];
     private name: string;
 
@@ -12,10 +14,18 @@ export default class Deck extends Entity<number> {
      * @param name 
      * @param flashcards 
      */
-    constructor(name: string, flashcards: Flashcard[]) {
+    private constructor(name: string, flashcards: Flashcard[]) {
         super();
         this.name = name;
         this.insertAll(flashcards);
+    }
+
+    static of(name: string, flashcards: Flashcard[]) {
+        return new Deck(name, flashcards);
+    }
+
+    static empty(name: string): Deck {
+        return new Deck(name, []);
     }
 
     getName() {
@@ -34,13 +44,20 @@ export default class Deck extends Entity<number> {
         return new Set(this.flashcards);
     }
 
-    /**
-     * There might be more than one flashcard within the deck, that include the wanted notion (fully or partly).
-     * Therefore, this method ought to yield a "collection" of cards.
-     * @param notion 
-     */
-    getFlashcardsByNotion(notion: string): Flashcard[] {
-        return this.flashcards.filter( flashcard => notion == flashcard.getNotion());
+    getFlashcardsByNotion(notion: string, exact: boolean = true): Flashcard | Set<Flashcard> | undefined {
+        return exact ?  this.flashcards.find(flashcard => notion = flashcard.getNotion()) :
+                        new Set(this.flashcards.filter( flashcard => flashcard.getNotion().includes(notion)));
+    }
+
+    getFlashcardsByMultipleNotions(notions: Set<string>, exact: boolean = true): Set<Flashcard> {
+        const foundFlashcards: Set<Flashcard> = new Set;
+        this.flashcards.filter(flashcard => {
+            notions.forEach(notion => {
+                if( (exact && notion === flashcard.getNotion()) || (!exact && flashcard.getNotion().includes(notion)))
+                    foundFlashcards.add(flashcard);
+            });
+        });
+        return foundFlashcards;
     }
     
     insertAll(flashcards: Flashcard[]) {
@@ -57,6 +74,16 @@ export default class Deck extends Entity<number> {
     insert(flashcard: Flashcard): Flashcard {
         if(!this.contains(flashcard))
             this.flashcards.push(flashcard);
+        else {
+            const existingFlashcard = this.flashcards.find(existingFlashcard => existingFlashcard.getId() === flashcard.getId());
+            // Object.assign(existingFlashcard!, flashcard);
+            console.log("Existing card: ", existingFlashcard);
+            return existingFlashcard!;
+        }
+
+        if(!flashcard.getDeck())
+            flashcard.setDeck(this);
+
         return this.flashcards[this.flashcards.length - 1];
     };
 
@@ -84,24 +111,33 @@ export default class Deck extends Entity<number> {
         const removedCardPosition = this.flashcards.findIndex( card => card.equals(flashcard));
         let removedFlashcard: Flashcard | undefined = undefined;
 
-        if(removedCardPosition === (this.flashcards.length))
+        if(removedCardPosition < 0)
             return removedFlashcard;
+
 
         if(removedCardPosition === 0) {
             removedFlashcard = this.flashcards.shift() as Flashcard;
+            removedFlashcard.setDeck(undefined);
             return removedFlashcard;
         }
         
         if(removedCardPosition === this.flashcards.length - 1)
-            return this.flashcards.pop() as Flashcard;
+        {
+            removedFlashcard = this.flashcards.pop() as Flashcard;
+            removedFlashcard.setDeck(undefined);
+            return removedFlashcard;
+        }
 
         removedFlashcard = this.flashcards[removedCardPosition];
+        removedFlashcard.setDeck(undefined);
         const obsoleteFlashcards = this.removeAll();
 
         for(let currentPosition = 0; currentPosition < obsoleteFlashcards.length; currentPosition++) {
             if(currentPosition === removedCardPosition)
                 continue;
-            this.flashcards.push(obsoleteFlashcards[currentPosition]);
+            const preservedFlashcard = obsoleteFlashcards[currentPosition];
+            preservedFlashcard.setDeck(this);
+            this.flashcards.push(preservedFlashcard);
         }
 
         return removedFlashcard;
@@ -109,9 +145,16 @@ export default class Deck extends Entity<number> {
 
     removeAll(): Flashcard[] {
         let removedFlashcards: Flashcard[] = [];
-        for(let flashcard of this.flashcards)
-            removedFlashcards.push(this.flashcards.pop() as Flashcard);
-        return removedFlashcards.reverse();
+        while(this.flashcards.length) {
+            const removedFlashcard = this.flashcards.pop() as Flashcard;
+            removedFlashcard.setDeck(undefined);
+            removedFlashcards.push(removedFlashcard);
+        }
+        return removedFlashcards;
+    }
+
+    isEmpty(): boolean {
+        return this.flashcards.length === 0;
     }
 
     size(): number {

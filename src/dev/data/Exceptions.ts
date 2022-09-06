@@ -1,5 +1,9 @@
-import Exception from '../Exception';
+import Exception from '../IdentifiableError';
 
-class KeyLimitException extends Exception {}
+class KeyLimitException extends Exception {
+    constructor(message: string) {
+        super(message, "1002_DB")
+    }
+}
 
 export { KeyLimitException }
