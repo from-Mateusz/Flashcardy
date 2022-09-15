@@ -1,13 +1,13 @@
 import { describe, expect, test } from '@jest/globals';
-import { Flashcard, Deck } from '../../dev/model/exports';
+import { Flashcard, Definition, Deck } from '../../dev/model/exports';
 
 describe('Deck of flashcards model/module', () => {
      test('should create a new deck of flashcards', () => {
 
          const deckName = 'English C1/C2 level | Revision | Unit 10';
-         const flashcards = [ new Flashcard("to size up", "to think carefully and form an opinion about a person or situation"),
-                             new Flashcard("a fat lot of good/help/use", "no use or help at all"),
-                             new Flashcard("in high spirits", "in a good mood")];
+         const flashcards = [ Flashcard.create("to size up", [Definition.of("to think carefully and form an opinion about a person or situation")]),
+                             Flashcard.create("a fat lot of good/help/use", [Definition.of("no use or help at all")]),
+                            Flashcard.create("in high spirits", [Definition.of("in a good mood")]) ];
          const deck = Deck.of(deckName, flashcards);
 
          expect(deck.getName()).toEqual(deckName)
@@ -17,9 +17,9 @@ describe('Deck of flashcards model/module', () => {
      test('should remove one flashcard from a deck', () => {
 
          const deckName = 'Spanish | Revision';
-         const flashcards = [ new Flashcard("importante", "important"),
-                             new Flashcard("atractivo", "attraction, appeal, attractive"),
-                             new Flashcard("optimista", "optimistic")];
+         const flashcards = [ Flashcard.create("importante", [Definition.of("important", "adjective")]),
+                                Flashcard.create("atractivo", [Definition.of("attraction, appeal", "noun"), Definition.of("appealing", "adjective")]),
+                                Flashcard.create("optimista", [Definition.of("optimist", "noun")])];
          const deck = Deck.of(deckName, flashcards);
 
          const removedFlashcard = deck.remove(flashcards[0]);
@@ -30,11 +30,11 @@ describe('Deck of flashcards model/module', () => {
 
      test('should clear a deck', () => {
 
-         const deckName = 'Spanish | Revision';
-         const flashcards = [ new Flashcard("importante", "important"),
-                             new Flashcard("atractivo", "attraction, appeal, attractive"),
-                             new Flashcard("optimista", "optimistic")];
-         const deck = Deck.of(deckName, flashcards);
+        const deckName = 'Spanish | Revision';
+        const flashcards = [ Flashcard.create("importante", [Definition.of("important", "adjective")]),
+                               Flashcard.create("atractivo", [Definition.of("attraction, appeal", "noun"), Definition.of("appealing", "adjective")]),
+                               Flashcard.create("optimista", [Definition.of("optimist", "noun")])];
+        const deck = Deck.of(deckName, flashcards);
     
          const removedFlashcards = deck.removeAll();
 
@@ -44,12 +44,14 @@ describe('Deck of flashcards model/module', () => {
 
      test('should create an empty deck and then put random flashcards into it', () => {
 
-             const deckName = 'English C1/C2 level | Revision | Unit 10';
+            const deckName = 'English C1/C2 level | Revision | Unit 10';
+            const flashcards = [ Flashcard.create("to size up", [Definition.of("to think carefully and form an opinion about a person or situation")]),
+                            Flashcard.create("a fat lot of good/help/use", [Definition.of("no use or help at all")]),
+                           Flashcard.create("in high spirits", [Definition.of("in a good mood")]) ];
 
              const deck = Deck.empty(deckName);
-             deck.insert(new Flashcard("to size up", "to think carefully and form an opinion about a person or situation"));
-             deck.insertAll([ new Flashcard("a fat lot of good/help/use", "no use or help at all"),
-                              new Flashcard("in high spirits", "in a good mood")]);
+             deck.insert(flashcards[0]);
+             deck.insertAll([flashcards[1], flashcards[2]])
              expect(deck.getFlashcards().size).toEqual(3);
      });
 });

@@ -1,6 +1,9 @@
 import * as fs from 'fs';
+import MainController from "../dev/web/MainController";
 
 const http = require('http');
+
+const mainController = new MainController();
 
 type Endpoint = {
     hostname: string;
@@ -12,33 +15,25 @@ type Configuration = {
     redis: Endpoint;
 }
 
+(() => kickstart())();
+
 /**
  * Kickstart method is mostly responsible for loading configuration ("app.config.json") values
  * into node.js environmental variables, which are used through out a whole application. 
  */
 function kickstart() {
-    fs.open(`${__dirname}/app.config.json`, (err, fd) => {
-        if(!err)
+    fs.readFile(`${__dirname}/app.config.json`, (err, data) => {
+        if( err )
             console.log('Could not open configuration file.');
-        else
-            fs.read(fd, (err, bytesCount, buf ) => {
-                if(!err)
-                    console.log('Could not read file.');
-                else {
-                    const content = buf.toString();
-                    if(content.length > 0)
-                        kickstartApplication(JSON.parse(content));
-                }
-            })  
-    });  
+        const configuration = JSON.parse(data.toString("utf-8"));
+        kickstartApplication(configuration);
+    });
 }
 
 function kickstartApplication( configuration: Configuration ) {
     const server = http.createServer(
         (req: any, res: any) => {
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'text/plain');
-            res.end('Welcome to Flashcardy');
+            mainController.process(req, res);
         }
     );
 

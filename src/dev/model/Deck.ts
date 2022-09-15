@@ -3,7 +3,8 @@ import Entity from "../data/Entity";
 
 export default class Deck extends Entity<number> {
     private static readonly sortAscending = (flashcard1: Flashcard, flashcard2: Flashcard) => {
-                                                return flashcard1.getId() > flashcard2.getId() ? 1 : flashcard1.getId() < flashcard2.getId() ? - 1 : 0 };
+        return (flashcard1.getId() || 0) > (flashcard2.getId() || 0) ? 1 : (flashcard1.getId() || 0) < (flashcard2.getId() || 0) ? - 1 : 0                                            
+    };
 
     private flashcards: Flashcard[] = [];
     private name: string;

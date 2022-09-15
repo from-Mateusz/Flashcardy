@@ -8,11 +8,21 @@ class Flashcard extends Entity_1.default {
     deck;
     notion;
     definition;
-    constructor(notion, definition, deck) {
+    definitions = [];
+    // constructor(notion: string, definition: string, deck?: Deck) {
+    //     super();
+    //     this.notion = notion;
+    //     this.definition = definition;
+    //     this.setDeck(deck);
+    // }
+    constructor(notion, definitions, deck) {
         super();
         this.notion = notion;
-        this.definition = definition;
+        this.definitions = definitions;
         this.setDeck(deck);
+    }
+    static create(notion, definitions, deck) {
+        return new Flashcard(notion, [...definitions], deck);
     }
     getDeck() {
         return this.deck;
@@ -22,6 +32,16 @@ class Flashcard extends Entity_1.default {
     }
     getDefinition() {
         return this.definition;
+    }
+    getDefinitions() {
+        return [...this.definitions];
+    }
+    setDefinitions(definitions) {
+        for (let definition of definitions) {
+            if (!definition.getFlashcard())
+                definition.changeFlashcard(this);
+            this.definitions.push(definition);
+        }
     }
     setDeck(deck) {
         this.deck = deck;

@@ -22,34 +22,30 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
+const MainController_1 = __importDefault(require("../dev/web/MainController"));
 const http = require('http');
+const mainController = new MainController_1.default();
+(() => kickstart())();
 /**
  * Kickstart method is mostly responsible for loading configuration ("app.config.json") values
  * into node.js environmental variables, which are used through out a whole application.
  */
 function kickstart() {
-    fs.open(`${__dirname}/app.config.json`, (err, fd) => {
-        if (!err)
+    fs.readFile(`${__dirname}/app.config.json`, (err, data) => {
+        if (err)
             console.log('Could not open configuration file.');
-        else
-            fs.read(fd, (err, bytesCount, buf) => {
-                if (!err)
-                    console.log('Could not read file.');
-                else {
-                    const content = buf.toString();
-                    if (content.length > 0)
-                        kickstartApplication(JSON.parse(content));
-                }
-            });
+        const configuration = JSON.parse(data.toString("utf-8"));
+        kickstartApplication(configuration);
     });
 }
 function kickstartApplication(configuration) {
     const server = http.createServer((req, res) => {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/plain');
-        res.end('Welcome to Flashcardy');
+        mainController.process(req, res);
     });
     server.listen(configuration['node'].port, configuration['node'].hostname, () => {
         console.log(`Server is running at http://${configuration['node'].hostname}:${configuration['node'].port}`);

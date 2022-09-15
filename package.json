@@ -5,7 +5,8 @@
   "main": "app.js",
   "type": "commonjs",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "kickstart-dev": "node src/dev/app.js"
   },
   "repository": {
     "type": "git",

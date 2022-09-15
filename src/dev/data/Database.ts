@@ -13,7 +13,7 @@ type EntityRelationship = {
 }
 
  type DatabaseEntity = {
-    [key: string]: string | number | EntityRelationship[]
+    [key: string]: string | number | EntityRelationship[] | undefined
 }
 
 class DatabaseTable {

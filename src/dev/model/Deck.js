@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Entity_1 = __importDefault(require("../data/Entity"));
 class Deck extends Entity_1.default {
     static sortAscending = (flashcard1, flashcard2) => {
-        return flashcard1.getId() > flashcard2.getId() ? 1 : flashcard1.getId() < flashcard2.getId() ? -1 : 0;
+        return (flashcard1.getId() || 0) > (flashcard2.getId() || 0) ? 1 : (flashcard1.getId() || 0) < (flashcard2.getId() || 0) ? -1 : 0;
     };
     flashcards = [];
     name;

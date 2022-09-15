@@ -1,4 +1,4 @@
-import { Deck, Flashcard, User } from '../model/exports';
+import { Deck, Flashcard, Definition, User } from '../model/exports';
 import { DatabaseEntity, EntityRelationship } from './Database';
 
 abstract class EntityModelConverter<Model extends any> {
@@ -15,9 +15,19 @@ class DeckEntityModelConverter extends EntityModelConverter<Deck> {
         deck.setId(entity["id"] as number);
         const flashcardsRelationships = (entity["flashcards"] as EntityRelationship[]);
         const flashcards = flashcardsRelationships.map(relationship => {
-                                                            let notion = relationship.source["notion"] as string;
-                                                            let definition = relationship.target["definition"] as string;
-                                                            return new Flashcard(notion, definition);
+            const id = relationship.source["id"] as number | undefined;
+            const notion = relationship.source["notion"] as string;
+            const definitions = (relationship.source["definitions"] as EntityRelationship[])
+                                                                                .map(relationship => {
+                                                                                    const id = relationship.source["id"];
+                                                                                    const content = relationship.source["content"];
+                                                                                    const label = relationship.source["label"];
+
+                                                                                    const definition = Definition.of(content as string, label as string | undefined);
+                                                                                    definition.setId(id as number);
+                                                                                    return definition;
+                                                                                });
+                                                            return Flashcard.create(notion, definitions);
                                                         });
         deck.insertAll(flashcards);
         return deck;
@@ -34,7 +44,22 @@ class ReverseDeckEntityModelConverter extends ReverseEntityModelConverter<Deck> 
                                         return {
                                             source: { id: flashcard.getId(),
                                                      notion: flashcard.getNotion(),
-                                                     definition: flashcard.getDefinition() },
+                                                     definitions: [
+                                                        ...flashcard.getDefinitions()
+                                                                    .map(definition => {
+                                                                        return {
+                                                                            source: {
+                                                                                id: definition.getId(),
+                                                                                content: definition.getContent(),
+                                                                                label: definition.getLabel()
+                                                                            },
+                                                                            target: {
+                                                                                id: flashcard.getId(),
+                                                                                notion: flashcard.getNotion()
+                                                                            }
+                                                                        }
+                                                                    })
+                                                     ]},
                                             target: { id: deck.getId(),
                                                       name: deck.getName() }
                                         }
@@ -52,7 +77,17 @@ class ReverseFlashcardEntityModelConverter extends ReverseEntityModelConverter<F
         const deckEntity = this.reverseDeckConverter.convert(flashcard.getDeck() as Deck);
         entity["id"] = flashcard.getId();
         entity["notion"] = flashcard.getNotion();
-        entity["definition"] = flashcard.getDefinition();
+        entity["definitions"] = flashcard.getDefinitions()
+                                    .map(definition => {
+                                        return {
+                                            source: {
+                                                id: definition.getId(),
+                                                content: definition.getContent(),
+                                                label: definition.getLabel()
+                                            },
+                                            target: entity
+                                        }
+                                    })
         entity["decks"] = Array.of({
             source: { id: flashcard.getId(),
                         notion: flashcard.getNotion(),
@@ -68,7 +103,20 @@ class FlashcardEntityModelConverter extends EntityModelConverter<Flashcard> {
     private readonly deckConverter = new DeckEntityModelConverter();
 
     convert(entity: DatabaseEntity): Flashcard | undefined {
-        const flashcard = new Flashcard(entity["notion"] as string, entity["definition"] as string);
+        const id = entity["id"] as number;
+        const notion = entity["notion"] as string;
+        const definitions = (entity["definitions"] as EntityRelationship[])
+                                .map(relationship => {
+                                    const id = relationship.source["id"];
+                                    const content = relationship.source["content"];
+                                    const label = relationship.source["label"];
+
+                                    const definition = Definition.of(content as string, label as string | undefined);
+                                    definition.setId(id as number);
+                                    return definition;
+                                });
+        const flashcard = Flashcard.create(notion, definitions);
+        flashcard.setId(id);
         const deckRelationship = (entity["decks"] as EntityRelationship[]);
         const decks = deckRelationship.map(relationship => this.deckConverter.convert(relationship.target as DatabaseEntity));
         flashcard.setDeck(decks[0]);

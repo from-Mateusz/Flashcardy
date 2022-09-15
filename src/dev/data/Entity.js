@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class Entity {
     id;
+    constructor(id) {
+        this.id = id;
+    }
     getId() {
         return this.id;
     }

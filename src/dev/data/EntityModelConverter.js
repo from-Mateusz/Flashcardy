@@ -12,9 +12,18 @@ class DeckEntityModelConverter extends EntityModelConverter {
         deck.setId(entity["id"]);
         const flashcardsRelationships = entity["flashcards"];
         const flashcards = flashcardsRelationships.map(relationship => {
-            let notion = relationship.source["notion"];
-            let definition = relationship.target["definition"];
-            return new exports_1.Flashcard(notion, definition);
+            const id = relationship.source["id"];
+            const notion = relationship.source["notion"];
+            const definitions = relationship.source["definitions"]
+                .map(relationship => {
+                const id = relationship.source["id"];
+                const content = relationship.source["content"];
+                const label = relationship.source["label"];
+                const definition = exports_1.Definition.of(content, label);
+                definition.setId(id);
+                return definition;
+            });
+            return exports_1.Flashcard.create(notion, definitions);
         });
         deck.insertAll(flashcards);
         return deck;
@@ -31,7 +40,22 @@ class ReverseDeckEntityModelConverter extends ReverseEntityModelConverter {
             return {
                 source: { id: flashcard.getId(),
                     notion: flashcard.getNotion(),
-                    definition: flashcard.getDefinition() },
+                    definitions: [
+                        ...flashcard.getDefinitions()
+                            .map(definition => {
+                            return {
+                                source: {
+                                    id: definition.getId(),
+                                    content: definition.getContent(),
+                                    label: definition.getLabel()
+                                },
+                                target: {
+                                    id: flashcard.getId(),
+                                    notion: flashcard.getNotion()
+                                }
+                            };
+                        })
+                    ] },
                 target: { id: deck.getId(),
                     name: deck.getName() }
             };
@@ -47,7 +71,17 @@ class ReverseFlashcardEntityModelConverter extends ReverseEntityModelConverter {
         const deckEntity = this.reverseDeckConverter.convert(flashcard.getDeck());
         entity["id"] = flashcard.getId();
         entity["notion"] = flashcard.getNotion();
-        entity["definition"] = flashcard.getDefinition();
+        entity["definitions"] = flashcard.getDefinitions()
+            .map(definition => {
+            return {
+                source: {
+                    id: definition.getId(),
+                    content: definition.getContent(),
+                    label: definition.getLabel()
+                },
+                target: entity
+            };
+        });
         entity["decks"] = Array.of({
             source: { id: flashcard.getId(),
                 notion: flashcard.getNotion(),
@@ -61,7 +95,19 @@ exports.ReverseFlashcardEntityModelConverter = ReverseFlashcardEntityModelConver
 class FlashcardEntityModelConverter extends EntityModelConverter {
     deckConverter = new DeckEntityModelConverter();
     convert(entity) {
-        const flashcard = new exports_1.Flashcard(entity["notion"], entity["definition"]);
+        const id = entity["id"];
+        const notion = entity["notion"];
+        const definitions = entity["definitions"]
+            .map(relationship => {
+            const id = relationship.source["id"];
+            const content = relationship.source["content"];
+            const label = relationship.source["label"];
+            const definition = exports_1.Definition.of(content, label);
+            definition.setId(id);
+            return definition;
+        });
+        const flashcard = exports_1.Flashcard.create(notion, definitions);
+        flashcard.setId(id);
         const deckRelationship = entity["decks"];
         const decks = deckRelationship.map(relationship => this.deckConverter.convert(relationship.target));
         flashcard.setDeck(decks[0]);

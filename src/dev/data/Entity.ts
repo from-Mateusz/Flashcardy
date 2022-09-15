@@ -1,5 +1,9 @@
 export default abstract class Entity<TID> {
-    private id!: TID;
+    private id?: TID;
+
+    constructor(id?: TID) {
+        this.id = id;
+    }
     
     getId() {
         return this.id;

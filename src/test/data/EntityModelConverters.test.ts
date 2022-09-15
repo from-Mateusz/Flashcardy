@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { Flashcard, Deck, User } from '../../dev/model/exports';
+import { Flashcard, Deck, User, Definition } from '../../dev/model/exports';
 import { DeckEntityModelConverter, ReverseDeckEntityModelConverter, 
             FlashcardEntityModelConverter, ReverseFlashcardEntityModelConverter, EntityRelationship } from '../../dev/data/exports';
 
@@ -7,7 +7,7 @@ describe("Converter | Deck to entity and conversely | Tests", () => {
     test("Should convert a deck into a database entity", () => {
         const converter = new ReverseDeckEntityModelConverter();
         const deck = Deck.of("Spanish Language | Revision | Unit 1", 
-            [new Flashcard("El paciente", "patient"), new Flashcard("El urgente", "urgent") ]
+            [Flashcard.create("El paciente", [Definition.of("patient", "adjective")]), Flashcard.create("El urgente", [Definition.of("urgent", "adjective")])]
         );
         const entity = converter.convert(deck);
         expect(entity).not.toBeUndefined();
@@ -18,7 +18,7 @@ describe("Converter | Deck to entity and conversely | Tests", () => {
         const converter = new ReverseDeckEntityModelConverter();
         const reverseConverter = new DeckEntityModelConverter();
         const deck = Deck.of("Spanish Language | Revision | Unit 1", 
-            [new Flashcard("El paciente", "patient"), new Flashcard("El urgente", "urgent") ]
+            [Flashcard.create("El paciente", [Definition.of("patient", "adjective")]), Flashcard.create("El urgente", [Definition.of("urgent", "adjective")])]
         );
         const entity = converter.convert(deck);
 
@@ -31,7 +31,7 @@ describe("Converter | Deck to entity and conversely | Tests", () => {
     test("Should convert a flashcard into a database entity", () => {
         const converter = new ReverseFlashcardEntityModelConverter();
         const deck = Deck.of("Spanish Language | Revision | Unit 1", 
-            [new Flashcard("El paciente", "patient"), new Flashcard("El urgente", "urgent") ]
+            [Flashcard.create("El paciente", [Definition.of("patient", "adjective")]), Flashcard.create("El urgente", [Definition.of("urgent", "adjective")])]
         );
 
         const flashcardToBeConverted = deck.getFlashcardsByNotion("El paciente", true) as Flashcard;
@@ -39,7 +39,7 @@ describe("Converter | Deck to entity and conversely | Tests", () => {
 
         expect(entity).not.toBeUndefined();
         expect(entity["notion"]).toEqual("El paciente");
-        expect(entity["definition"]).toEqual("patient");
+        expect(entity["definitions"] as EntityRelationship[]).toHaveLength(1);
         expect(entity["decks"] as EntityRelationship[]).toHaveLength(1);
     });
 
@@ -48,7 +48,7 @@ describe("Converter | Deck to entity and conversely | Tests", () => {
         const reverseConverter = new FlashcardEntityModelConverter();
 
         const deck = Deck.of("Spanish Language | Revision | Unit 1", 
-            [new Flashcard("El paciente", "patient"), new Flashcard("El urgente", "urgent") ]
+            [Flashcard.create("El paciente", [Definition.of("patient", "adjective")]), Flashcard.create("El urgente", [Definition.of("urgent", "adjective")])]
         );
 
         const flashcardToBeConverted = deck.getFlashcardsByNotion("El paciente", true) as Flashcard;
@@ -59,7 +59,7 @@ describe("Converter | Deck to entity and conversely | Tests", () => {
         console.log("Recreated flashcard: \n", recreatedFlashcard);
 
         expect(recreatedFlashcard!.getNotion()).toEqual(flashcardToBeConverted.getNotion());
-        expect(recreatedFlashcard!.getDefinition()).toEqual(flashcardToBeConverted.getDefinition());
+        expect(recreatedFlashcard!.getDefinitions()).toHaveLength(flashcardToBeConverted.getDefinitions().length);
         expect(recreatedFlashcard!.getDeck()!.getName()).toEqual(deck.getName());
     });
 })
